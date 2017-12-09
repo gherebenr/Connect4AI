@@ -5,6 +5,7 @@ public class AIMiniMax extends AIModule {
 	private int maxDepth;
 	private int tempChosenMove;
 	
+	// Keeps track of all the possible ways to win.
 	private int[][][] allPossibleWins = {		
 		// vertical
 		{{0,0},{0,1},{0,2},{0,3}}, {{0,1},{0,2},{0,3},{0,4}}, {{0,2},{0,3},{0,4},{0,5}},
@@ -38,7 +39,7 @@ public class AIMiniMax extends AIModule {
 
 	@Override
 	public void getNextMove(final GameStateModule state) {
-		// setting the player ID's
+		// Setting the player ID's.
 		this.AIID = state.getActivePlayer();
 		this.adversaryID = 1 + this.AIID % 2;
 
@@ -49,29 +50,26 @@ public class AIMiniMax extends AIModule {
 		maxDepth = startDepth;
 		tempChosenMove = -1;
 		
-		// if this move is available, make it, since it increases the chance of winning
+		// If this move is available, make it, since it increases the chance of winning.
 		if(state.getAt(3, 0) == 0){
 			chosenMove = 3;
 			return;
 		}
-		
-		// almost guaranteed to be able to get the minimax results at this depth
+
+		// First attempt to get a move.
 		value = maxValue(state, maxDepth);
 		chosenMove = tempChosenMove;
 		overallMaxValue = value;
 		
-		// return if found a winning move
-		if(overallMaxValue >= 10000000){
-		    return;
-	    }
-		
-		// if there is still time left, try increasing the depth and getting new minimax results.
+		// If there is still time left, try increasing the depth and getting new minimax results.
 		try{
-			while(!terminate && maxDepth <= 44){
+			while(!terminate && state.getCoins() + maxDepth <= 42){
+				// Increase the depth by 2, 1 for min and 1 for max.
 				maxDepth += 2;
 				tempChosenMove = -1;
 				value = maxValue(state, maxDepth);
-				if(value > overallMaxValue){
+				// If the new move gets a higher value, set the chosenMove to it.
+				if(value > overallMaxValue && !terminate){
 					overallMaxValue = value;
 					chosenMove = tempChosenMove;
 				}
@@ -82,15 +80,24 @@ public class AIMiniMax extends AIModule {
 	}
 
 	private int maxValue(GameStateModule state, int depth){
+		// If chosenMove is already set to something, just throw an exception to return.
 		if(terminate && chosenMove > -1){
 			throw new RuntimeException("No Time Left!");
 		}
+
+		// Return the result of the evaluation function if either the max depth was reached, the end of a game was found,
+		// or the terminate flag was set.
 		if (terminate || state.isGameOver() || depth <= 0){
-			return utility(state);
+			return evaluate(state);
 		}
+
 		int max = Integer.MIN_VALUE;
 		int maxTempVal;
-		for (int i = 0; i < state.getWidth(); i++) {
+		
+		// Moves in the middle of the board increase the chance of winning since they give more options to the player, so
+		// the algorithm will start searching from the middle out.
+		int movePriority[] = {3,4,2,5,1,6,0};
+		for (int i : movePriority) {
 			if (state.canMakeMove(i)) {
 				state.makeMove(i);
 				maxTempVal = minValue(state, depth - 1);
@@ -106,17 +113,20 @@ public class AIMiniMax extends AIModule {
 		return max;
 	}
 
-
 	private int minValue(GameStateModule state, int depth) {
 		if(terminate && chosenMove > -1){
 			throw new RuntimeException("No Time Left!");
 		}
+
 		if (terminate || state.isGameOver() || depth <= 0){
-			return utility(state);
+			return evaluate(state);
 		}
+		
 		int min = Integer.MAX_VALUE;
 		int minTempVal;
-		for (int i = 0; i < state.getWidth(); i++) {
+
+		int movePriority[] = {3,4,2,5,1,6,0};
+		for (int i : movePriority) {
 			if (state.canMakeMove(i)) {
 				state.makeMove(i);
 				minTempVal = maxValue(state, depth - 1);
@@ -129,76 +139,67 @@ public class AIMiniMax extends AIModule {
 		return min;
 	}
 
-	private int utility(GameStateModule state) {
+	// Evaluation function.
+	private int evaluate(GameStateModule state) {
+		// Return if the terminate flag is on and a move has already been chosen.
 		if(terminate && chosenMove > -1){
 			throw new RuntimeException("No Time Left!");
 		}
 
-		// if the game is over, depending on who won, return a really high value, a really low value or 0
-		if (state.isGameOver()) {
-			if (state.getWinner() == this.AIID)
-				return 10000000;
-			else if (state.getWinner() == this.adversaryID)
-				return -10000000;
-			else
-				return 0;
-		}
-
-		
 		int value = 0;
 		int maxValue;
 		int minValue;
 		int x;
 		int y;
 
-		// checking every possible win
+		// If the game is over, set value to 10000000 if max won or -10000000 if max lost.
+		// If the game ended in a draw, return 0.
+		if (state.isGameOver()) { 
+			if (state.getWinner() == this.AIID) 
+			  value = 10000000; 
+			else if (state.getWinner() == this.adversaryID) 
+			  value = -10000000; 
+			else 
+			  return 0; 
+		}
+
+		// Checking every possible win
 		for (int[][] possibleWin : this.allPossibleWins) {
 			minValue = 0;
 			maxValue = 0;
-			x = 0;
-			y = 0;
+			x = -1;
+			y = -1;
 
-			// for each winning line, add the number of coins each player has on that line
+			// For each winning line, add the number of coins each player has on that line.
 			for (int[] possibleWinPosition : possibleWin) {
-				// if both players have coins on that line, break out since it won't be counted
-				if(maxValue > 0 && minValue > 0){
-					break;
-				}
 				int playerIDAt = state.getAt(possibleWinPosition[0], possibleWinPosition[1]);
-				if (playerIDAt == this.AIID) {
+				if(playerIDAt == this.AIID) {
 					maxValue++;
-				} else if (playerIDAt == this.adversaryID) {
+				} else if(playerIDAt == this.adversaryID) {
 					minValue++;
 				} else {
 					x = possibleWinPosition[0];
 					y = possibleWinPosition[1];
 				}
+				// If both players have coins on that line, break out since it won't be counted.
+				if(maxValue > 0 && minValue > 0){break;}
 			}
+
+			// Make some adjustments to the values.
 			if (!(maxValue > 0 && minValue > 0)) {
-				if (maxValue == 3) {
-					// this is for when the line is diagonal and there is nothing under 
-					// the position that would get the win. need to check if it will be possible 
-					// for my AI to win
-					if (y > 0 && state.getAt(x, y - 1) == 0) {
-						if ((this.AIID == 1 && y % 2 == 0) || (this.AIID == 2 && y % 2 == 1)){
-							maxValue += 100;
-						}
-					} else if (state.getActivePlayer() == this.AIID) { // this is when the AI is one move away from winning
-						return 100000;
-					} else {
-						maxValue += 10; // still count it if the adversary has the chance to block, because it might make a mistake
+				if(minValue == 3) {
+					minValue = 10;
+					// Checks if the player is able to win the next turn.
+					if((y == 0 || (y > 0 && state.getAt(x, y - 1) != 0)) && state.getActivePlayer() == this.adversaryID){
+						minValue = 100000;
 					}
 				}
-				// same as before, but adding points for the min player.
-				if (minValue == 3) {
-					if (y > 0 && state.getAt(x, y - 1) == 0) {
-						if ((this.adversaryID == 1 && y % 2 == 0) || (this.adversaryID == 2 && y % 2 == 1)){
-							minValue += 100;
-						}
-					} else if (state.getActivePlayer() == this.adversaryID) {
-						return -100000;
-					} else {
-						minValue += 10;
+
+				// Same as before, but adding points for the max player.
+				if(maxValue == 3) {
+					maxValue = 10;
+					if((y == 0 || (y > 0 && state.getAt(x, y - 1) != 0)) && state.getActivePlayer() == this.AIID){
+						maxValue = 100000;
 					}
 				}
 				value += (maxValue - minValue);
