@@ -14,4 +14,4 @@ Created AI that can play Connect Four using the alphabeta algorithm and an evalu
 1) The AI has to make a decision within 500ms.
 2) In a perfect game, the first player will win. So if the AI plays against itself, it should win as player 1.
 
-### Important: I only wrote AIMiniMax.java and AIAlphaBeta.java.
+## I only wrote AIMiniMax.java and AIAlphaBeta.java.
