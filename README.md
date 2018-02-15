@@ -1,5 +1,5 @@
 # Connect Four AI
-Created AI that can play Connect Four using the alphabeta algorithm and an evaluation function.
+AI which can play Connect Four using the alphabeta algorithm and an evaluation function.
 
 ### Getting Started
 1) Run: ```javac *.java```. This will compile everything.
