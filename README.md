@@ -1,12 +1,3 @@
-# AStar
-Implementation of the A* pathfinding algorithm. 
-
-### Getting Started
-1) Run: ```javac *.java```. This will compile everything.
-2) Run any of the following:
-    1) ```java Main AStar``` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| This will run A* on a random map.
-    2) ```java Main AStar -seed NUM``` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Replace NUM with a number. Will run A* on a map with a specific seed.
-    
 # Connect Four AI
 Created AI that can play Connect Four using the alphabeta algorithm and an evaluation function.
 
